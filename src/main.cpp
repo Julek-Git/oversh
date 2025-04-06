@@ -31,7 +31,7 @@ int main() {
   while (1) {
     char hostname_buf[1024];
     sys::gethostname(hostname_buf, 1024);
-    std::cout << sys::getlogin() << "@" << hostname_buf << std::endl << utils::getcwd() << "$ " << std::flush;
+    std::cout << utils::getcwd() << std::endl << sys::getlogin() << "@" << hostname_buf << "$ " << std::flush;
 
     std::string command = "";
     std::string prog_args = "";
@@ -63,9 +63,7 @@ void run(std::string file, std::string args) {
   pid_t pid = sys::fork();
 
   if (pid == 0) {
-    char *argv[] = { strdup(file.c_str()), strdup(args.c_str()), NULL };
-    
-    sys::execvp(file.c_str(), argv);
+    sys::execlp(file.c_str(), args.c_str(), NULL);
 
     std::cerr << "exec failed: " << strerror(errno) << std::endl;
     exit(1);
