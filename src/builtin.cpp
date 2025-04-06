@@ -24,3 +24,15 @@ void builtin::history(std::string) {
     std::cout << cmd << "\n";
   }
 }
+
+extern std::vector<std::pair<std::string, std::string>> command_aliases;
+void builtin::alias(std::string alias) {
+  size_t pos = alias.find('=');
+  if (pos == std::string::npos) {
+    std::cerr << "alias: invalid alias format\n";
+    return;
+  }
+  std::string alias_name = alias.substr(0, pos);
+  std::string alias_value = alias.substr(pos + 1);
+  command_aliases.push_back({alias_name, alias_value});
+}

@@ -18,6 +18,7 @@ namespace sys {
 #include "run_process.h"
 
 std::vector<std::string> command_history;
+std::vector<std::pair<std::string, std::string>> command_aliases;
 
 void run(std::string file, std::string args);
 
@@ -27,6 +28,7 @@ int main() {
 
   builtin_commands["cd"] = builtin::cd;
   builtin_commands["history"] = builtin::history;
+  builtin_commands["alias"] = builtin::alias;
 
 
   while (1) {
@@ -47,6 +49,13 @@ int main() {
 
     size_t space_pos = command.find(' ');
     std::string base_cmd = command.substr(0, space_pos);
+
+    for (const auto& alias : command_aliases) {
+      if (alias.first == base_cmd) {
+        command = alias.second + " " + command.substr(space_pos + 1);
+        break;
+      }
+    }
 
     if (builtin_commands.count(base_cmd)) {
       std::string args = space_pos != std::string::npos ? command.substr(space_pos + 1) : "";
