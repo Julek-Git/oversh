@@ -2,7 +2,7 @@ TARGET = bin/oversh
 
 CC = g++
 
-CFLAGS = -Wall -Wextra -O3 -Iinclude -std=c++20
+CFLAGS = -Wall -Wextra -O3 -Iinclude -Iutils -std=c++20
 
 SRCDIR = src
 OBJDIR = obj

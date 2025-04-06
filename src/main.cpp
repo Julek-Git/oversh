@@ -2,23 +2,23 @@
 #include <map>
 #include <vector>
 
+
 #include <cstdlib>
 #include <cstring>
 
+namespace sys {
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <linux/limits.h>
+}
 
-std::string cwd = "";
+#include "builtin.hpp"
+#include "cwd.hpp"
+
 std::vector<std::string> command_history;
 
 void run(std::string file, std::string args);
-
-namespace builtin {
-  void cd(std::string);
-  void history(std::string);
-}
 
 
 int main() {
@@ -27,13 +27,11 @@ int main() {
   builtin_commands["cd"] = builtin::cd;
   builtin_commands["history"] = builtin::history;
 
-  char cwd_buf[PATH_MAX];
-  getcwd(cwd_buf, sizeof(cwd_buf));
-  cwd = cwd_buf;
-
 
   while (1) {
-    std::cout << cwd << "$ " << std::flush;
+    char hostname_buf[1024];
+    sys::gethostname(hostname_buf, 1024);
+    std::cout << sys::getlogin() << "@" << hostname_buf << std::endl << utils::getcwd() << "$ " << std::flush;
 
     std::string command = "";
     std::string prog_args = "";
@@ -62,48 +60,18 @@ int main() {
 }
 
 void run(std::string file, std::string args) {
-  pid_t pid = fork();
+  pid_t pid = sys::fork();
 
   if (pid == 0) {
     char *argv[] = { strdup(file.c_str()), strdup(args.c_str()), NULL };
     
-    execvp(file.c_str(), argv);
+    sys::execvp(file.c_str(), argv);
 
     std::cerr << "exec failed: " << strerror(errno) << std::endl;
     exit(1);
   } else if (pid > 0) {
-    wait(NULL);
+    sys::wait(NULL);
   } else {
     std::cerr << "fork failed: " << strerror(errno) << std::endl;
-  }
-}
-
-void builtin::cd(std::string new_path) {
-  if (new_path == "") {
-    std::cerr << "cd: missing argument\n";
-    return;
-  }
-
-  if (new_path[0] == '/') {
-    if (chdir(new_path.c_str()) == -1) {
-      std::cerr << "cd: " << strerror(errno) << "\n";
-    } else {
-      cwd = new_path;
-    }
-  } else {
-    std::string full_path = cwd + "/" + new_path;
-    if (chdir(full_path.c_str()) == -1) {
-      std::cerr << "cd: " << strerror(errno) << "\n";
-    } else {
-      char cwd_buf[PATH_MAX];
-      getcwd(cwd_buf, sizeof(cwd_buf));
-      cwd = cwd_buf;
-    }
-  }
-}
-
-void builtin::history(std::string) {
-  for (const std::string &cmd : command_history) {
-    std::cout << cmd << "\n";
   }
 }
